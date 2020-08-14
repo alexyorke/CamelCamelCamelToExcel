@@ -6,12 +6,14 @@ namespace CamelCamelCamelToExcel
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
             const string url = "https://camelcamelcamel.com/product/B07G82D89J?context=search";
-            var scaledGraph = new Graph(url, new GraphParameters()).Create();
+            var product = PriceHistory.FromUrl(url);
+            var scaledGraph = new PriceHistory(product);
+            var output2 = scaledGraph.Create();
 
-            var output = scaledGraph.Aggregate("", (current, point) => current + $"{point.X}\t{point.Y}\n");
+            var output = output2.Aggregate("", (current, point) => current + $"{point.X}\t{point.Y}\n");
 
             File.WriteAllText("camelcamelcamel.txt", output);
         }

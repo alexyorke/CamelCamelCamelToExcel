@@ -11,31 +11,35 @@ namespace CamelCamelCamelToExcel
         private readonly GraphParameters _graphParameters;
         private readonly string _url;
 
-        public Graph(string url, GraphParameters graphParameters)
+        public Graph(string url, GraphParameters graphParameters, Decimal minprice, Decimal maxprice)
         {
             _url = url;
             _graphParameters = graphParameters;
+            this.MinPrice = minprice;
+            this.MaxPrice = maxprice;
         }
+
+        public decimal MinPrice { get; set; }
+
+        public decimal MaxPrice { get; set; }
 
         public IEnumerable<PointF> Create()
         {
-            var webpageHtml = HttpService.DownloadWebpage(_url);
             var image = DownloadGraphImage(_url, _graphParameters);
             var graphPoints = GetPricePoints(image);
 
             var graphAtOriginPoints = AlignGraphToOrigin(graphPoints, image);
 
-            decimal minPrice = GetMinPrice(webpageHtml);
-            decimal maxPrice = GetMaxPrice(webpageHtml);
-            var startDate = GetStartDate(webpageHtml);
-            var endDate = GetEndDate(webpageHtml);
+            var startDate = this._graphParameters.StartDate;
+            var endDate = this._graphParameters.EndDate;
             var maxDay = (endDate - startDate).Days;
 
             // scale graph to min max price and days
-            return ResizeGraphToFitArea(graphAtOriginPoints, minPrice, maxPrice, maxDay);
+            return ResizeGraphToFitArea(graphAtOriginPoints, this.MinPrice, this.MaxPrice, maxDay);
         }
 
-        private static IEnumerable<PointF> ResizeGraphToFitArea(IReadOnlyCollection<PointF> graphAtOriginPoints, decimal minPrice, decimal maxPrice,
+        private static IEnumerable<PointF> ResizeGraphToFitArea(IReadOnlyCollection<PointF> graphAtOriginPoints,
+            decimal minPrice, decimal maxPrice,
             int maxDay)
         {
             var scaledGraph = graphAtOriginPoints.Select(p => ScalePoint(p,
@@ -55,26 +59,6 @@ namespace CamelCamelCamelToExcel
                     => new PointF {X = key, Y = g.Max()})
                 .ToList();
             return graphAtOriginPoints;
-        }
-
-        private static DateTime GetEndDate(string webpageHtml)
-        {
-            return new DateTime(2020, 7, 15);
-        }
-
-        private static DateTime GetStartDate(string webpageHtml)
-        {
-            return new DateTime(2019, 7, 15);
-        }
-
-        private static int GetMaxPrice(string webpageHtml)
-        {
-            return 70;
-        }
-
-        private static int GetMinPrice(string webpageHtml)
-        {
-            return 52;
         }
 
         private static IEnumerable<PointF> GetPricePoints(Bitmap image)
