@@ -8,15 +8,15 @@ namespace CamelCamelCamelToExcel
 {
     internal class Graph
     {
-        internal DateTime endDate;
-        internal Bitmap graph;
-        internal decimal maxPrice;
-        internal decimal minPrice;
-        internal DateTime startDate;
+        private DateTime endDate;
+        private Bitmap graph;
+        private decimal maxPrice;
+        private decimal minPrice;
+        private DateTime startDate;
 
         public static IEnumerable<PointF> CreateGraphFromUrl(string url)
         {
-            var image = Program.DownloadGraph(url, new DateTime(2020, 8, 10));
+            var image = DownloadGraph(url, new DateTime(2020, 8, 10));
             var graphPoints = GetPricePoints(image.graph);
 
             var graphAtOriginPoints = graphPoints.Select(p => new PointF(p.X, image.graph.Height - p.Y - 1))
@@ -41,7 +41,7 @@ namespace CamelCamelCamelToExcel
             return scaledGraph;
         }
 
-        public static IEnumerable<PointF> GetPricePoints(Bitmap image)
+        private static IEnumerable<PointF> GetPricePoints(Bitmap image)
         {
             var graphPoints = new List<Point>();
             var topLeftHandCorner = new Point();
@@ -67,11 +67,23 @@ namespace CamelCamelCamelToExcel
                 new PointF(point.X - topLeftHandCorner.X, point.Y - topLeftHandCorner.Y));
         }
 
-        public static string ConvertWebpageUrlToImageUrl(string contents)
+        private static string ConvertWebpageUrlToImageUrl(string contents)
         {
             var productId = Regex.Match(contents, @"product\/([A-Za-z0-9]+)").Groups[1].Value;
             return
                 $"https://charts.camelcamelcamel.com/us/{productId}/amazon.png?force=1&zero=0&w=4000&h=4000&desired=false&legend=1&ilt=1&tp=all&fo=0&lang=en";
+        }
+
+        private static Graph DownloadGraph(string url, DateTime startDate, DateTime? endDate = null)
+        {
+            var contents = HttpService.DownloadWebpage(url);
+            var imageUrl = Graph.ConvertWebpageUrlToImageUrl(url);
+            var downloadedGraph = HttpService.DownloadImage(imageUrl);
+            return new Graph
+            {
+                graph = downloadedGraph, startDate = startDate, endDate = endDate ?? DateTime.Now,
+                maxPrice = 0, minPrice = 0
+            };
         }
     }
 }
