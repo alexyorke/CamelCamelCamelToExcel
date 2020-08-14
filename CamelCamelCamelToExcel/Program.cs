@@ -9,7 +9,7 @@ namespace CamelCamelCamelToExcel
         private static void Main(string[] args)
         {
             const string url = "https://camelcamelcamel.com/product/B07G82D89J?context=search";
-            var scaledGraph = new Graph().Create(url);
+            var scaledGraph = new Graph(url, new GraphParameters()).Create();
 
             var output = scaledGraph.Aggregate("", (current, point) => current + $"{point.X}\t{point.Y}\n");
 
