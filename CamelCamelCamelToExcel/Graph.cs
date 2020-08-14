@@ -13,10 +13,12 @@ namespace CamelCamelCamelToExcel
         private decimal maxPrice;
         private decimal minPrice;
         private DateTime startDate;
+        private uint width;
+        private uint height;
 
-        public static IEnumerable<PointF> CreateGraphFromUrl(string url)
+        public IEnumerable<PointF> Create(string url)
         {
-            var image = DownloadGraph(url, new DateTime(2020, 8, 10));
+            var image = DownloadGraph(url, new DateTime(2020, 8, 10), DateTime.Now, width, height);
             var graphPoints = GetPricePoints(image.graph);
 
             var graphAtOriginPoints = graphPoints.Select(p => new PointF(p.X, image.graph.Height - p.Y - 1))
@@ -25,10 +27,10 @@ namespace CamelCamelCamelToExcel
                     => new PointF {X = key, Y = g.Max()})
                 .ToList();
 
-            const decimal minPrice = 52;
-            const decimal maxPrice = 70;
-            var startDate = new DateTime(2019, 7, 15);
-            var endDate = new DateTime(2020, 7, 15);
+            decimal minPrice = GetMinPrice();
+            decimal maxPrice = GetMaxPrice();
+            var startDate = GetStartDate();
+            var endDate = GetEndDate();
             var maxDay = (endDate - startDate).Days;
 
             // scale graph to min max price and days
@@ -39,6 +41,26 @@ namespace CamelCamelCamelToExcel
                 (decimal) graphAtOriginPoints.Max(q => q.Y),
                 minPrice, maxPrice, 0, maxDay));
             return scaledGraph;
+        }
+
+        private static DateTime GetEndDate()
+        {
+            return new DateTime(2020, 7, 15);
+        }
+
+        private static DateTime GetStartDate()
+        {
+            return new DateTime(2019, 7, 15);
+        }
+
+        private static int GetMaxPrice()
+        {
+            return 70;
+        }
+
+        private static int GetMinPrice()
+        {
+            return 52;
         }
 
         private static IEnumerable<PointF> GetPricePoints(Bitmap image)
@@ -67,21 +89,21 @@ namespace CamelCamelCamelToExcel
                 new PointF(point.X - topLeftHandCorner.X, point.Y - topLeftHandCorner.Y));
         }
 
-        private static string ConvertWebpageUrlToImageUrl(string contents)
+        private static string ConvertWebpageUrlToImageUrl(string contents, uint width, uint height)
         {
             var productId = Regex.Match(contents, @"product\/([A-Za-z0-9]+)").Groups[1].Value;
             return
-                $"https://charts.camelcamelcamel.com/us/{productId}/amazon.png?force=1&zero=0&w=4000&h=4000&desired=false&legend=1&ilt=1&tp=all&fo=0&lang=en";
+                $"https://charts.camelcamelcamel.com/us/{productId}/amazon.png?force=1&zero=0&w={width}&h={height}&desired=false&legend=1&ilt=1&tp=all&fo=0&lang=en";
         }
 
-        private static Graph DownloadGraph(string url, DateTime startDate, DateTime? endDate = null)
+        private static Graph DownloadGraph(string url, DateTime startDate, DateTime endDate, uint width, uint height)
         {
             var contents = HttpService.DownloadWebpage(url);
-            var imageUrl = Graph.ConvertWebpageUrlToImageUrl(url);
+            var imageUrl = Graph.ConvertWebpageUrlToImageUrl(url, width, height);
             var downloadedGraph = HttpService.DownloadImage(imageUrl);
             return new Graph
             {
-                graph = downloadedGraph, startDate = startDate, endDate = endDate ?? DateTime.Now,
+                graph = downloadedGraph, startDate = startDate, endDate = endDate,
                 maxPrice = 0, minPrice = 0
             };
         }
