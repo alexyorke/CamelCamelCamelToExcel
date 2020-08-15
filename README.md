@@ -6,7 +6,7 @@ Convert CamelCamelCamel listings to an Excel spreadsheet. Well, a TSV file which
 
 ## Usage
 
-```
+```csharp
 const string url = "https://camelcamelcamel.com/product/B07G82D89J?context=search";
 var productPageBuilder = new ProductPageBuilder(url);
 var productPage = productPageBuilder.Build();
