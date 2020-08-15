@@ -11,7 +11,7 @@ namespace CamelCamelCamelToExcel
         private readonly GraphParameters _graphParameters;
         private readonly string _url;
 
-        public Graph(string url, GraphParameters graphParameters, Decimal minprice, Decimal maxprice)
+        public Graph(string url, GraphParameters graphParameters, decimal minprice, decimal maxprice)
         {
             _url = url;
             _graphParameters = graphParameters;
@@ -19,9 +19,9 @@ namespace CamelCamelCamelToExcel
             this.MaxPrice = maxprice;
         }
 
-        public decimal MinPrice { get; set; }
+        private decimal MinPrice { get; set; }
 
-        public decimal MaxPrice { get; set; }
+        private decimal MaxPrice { get; set; }
 
         public IEnumerable<PointF> Create()
         {

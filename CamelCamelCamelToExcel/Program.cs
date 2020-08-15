@@ -9,13 +9,14 @@ namespace CamelCamelCamelToExcel
         private static void Main()
         {
             const string url = "https://camelcamelcamel.com/product/B07G82D89J?context=search";
-            var product = PriceHistory.FromUrl(url);
-            var scaledGraph = new PriceHistory(product);
-            var output2 = scaledGraph.Create();
+            var productPageBuilder = new ProductPageBuilder(url);
+            var productPage = productPageBuilder.Build();
 
-            var output = output2.Aggregate("", (current, point) => current + $"{point.X}\t{point.Y}\n");
+            var graph = productPage.Graph.Create();
 
-            File.WriteAllText("camelcamelcamel.txt", output);
+            var tsv = graph.Aggregate("", (current, point) => current + $"{point.X}\t{point.Y}\n");
+
+            File.WriteAllText("camelcamelcamel.txt", tsv);
         }
     }
 }
