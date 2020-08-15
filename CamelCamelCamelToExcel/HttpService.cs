@@ -5,6 +5,11 @@ namespace CamelCamelCamelToExcel
 {
     internal static class HttpService
     {
+        /// <summary>
+        ///     Downloads an image file
+        /// </summary>
+        /// <param name="url">The URL where to get the image from</param>
+        /// <returns>An image file</returns>
         public static Bitmap DownloadImage(string url)
         {
             using var client = new WebClient();

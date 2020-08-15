@@ -14,14 +14,18 @@ namespace CamelCamelCamelToExcel
         {
             _url = url;
             _graphParameters = graphParameters;
-            this.MinPrice = minprice;
-            this.MaxPrice = maxprice;
+            MinPrice = minprice;
+            MaxPrice = maxprice;
         }
 
-        private decimal MinPrice { get; set; }
+        private decimal MinPrice { get; }
 
-        private decimal MaxPrice { get; set; }
+        private decimal MaxPrice { get; }
 
+        /// <summary>
+        ///     Creates a graph
+        /// </summary>
+        /// <returns>The price graph</returns>
         public IEnumerable<PointF> Create()
         {
             var image = DownloadGraphImage(_url, _graphParameters);
@@ -29,14 +33,22 @@ namespace CamelCamelCamelToExcel
 
             var graphAtOriginPoints = AlignGraphToOrigin(graphPoints, image);
 
-            var startDate = this._graphParameters.StartDate;
-            var endDate = this._graphParameters.EndDate;
+            var startDate = _graphParameters.StartDate;
+            var endDate = _graphParameters.EndDate;
             var maxDay = (endDate - startDate).Days;
 
             // scale graph to min max price and days
-            return ResizeGraphToFitArea(graphAtOriginPoints, this.MinPrice, this.MaxPrice, maxDay);
+            return ResizeGraphToFitArea(graphAtOriginPoints, MinPrice, MaxPrice, maxDay);
         }
 
+        /// <summary>
+        ///     Resizes a graph in the x and y direction to set a new min and max
+        /// </summary>
+        /// <param name="graphAtOriginPoints">The aligned graph to (0, 0)</param>
+        /// <param name="minPrice">The minimum price</param>
+        /// <param name="maxPrice">The maximum price</param>
+        /// <param name="maxDay">The total days in the graph</param>
+        /// <returns>A new graph which is resized to fit that area</returns>
         private static IEnumerable<PointF> ResizeGraphToFitArea(IReadOnlyCollection<PointF> graphAtOriginPoints,
             decimal minPrice, decimal maxPrice,
             int maxDay)
@@ -50,6 +62,12 @@ namespace CamelCamelCamelToExcel
             return scaledGraph;
         }
 
+        /// <summary>
+        ///     Shifts the graph so that (0, 0) is the top-most point in the graph
+        /// </summary>
+        /// <param name="graphPoints">A list of graph points</param>
+        /// <param name="image">The graph image to use as a reference</param>
+        /// <returns>A new graph which is aligned to the origin</returns>
         private static List<PointF> AlignGraphToOrigin(IEnumerable<PointF> graphPoints, Image image)
         {
             var graphAtOriginPoints = graphPoints.Select(p => new PointF(p.X, image.Height - p.Y - 1))
@@ -60,6 +78,11 @@ namespace CamelCamelCamelToExcel
             return graphAtOriginPoints;
         }
 
+        /// <summary>
+        ///     Parses a graph image into a list of points
+        /// </summary>
+        /// <param name="image">The graph image</param>
+        /// <returns>A set of points corresponding to raw pixel positions on the image</returns>
         private static IEnumerable<PointF> GetPricePoints(Bitmap image)
         {
             var graphPoints = new List<Point>();
@@ -86,6 +109,13 @@ namespace CamelCamelCamelToExcel
                 new PointF(point.X - topLeftHandCorner.X, point.Y - topLeftHandCorner.Y));
         }
 
+        /// <summary>
+        ///     Converts a webpage url to an image url.
+        /// </summary>
+        /// <param name="url">The CamelCamelCamel product url</param>
+        /// <param name="width">The desired width of the image in pixels</param>
+        /// <param name="height">The desired height of the image in pixels</param>
+        /// <returns>An image url</returns>
         private static string ConvertWebpageUrlToImageUrl(string url, uint width, uint height)
         {
             var productId = Regex.Match(url, @"product\/([A-Za-z0-9]+)").Groups[1].Value;
@@ -93,12 +123,31 @@ namespace CamelCamelCamelToExcel
                 $"https://charts.camelcamelcamel.com/us/{productId}/amazon.png?force=1&zero=0&w={width}&h={height}&desired=false&legend=1&ilt=1&tp=all&fo=0&lang=en";
         }
 
+        /// <summary>
+        ///     Downloads a graph using specified graph parameters
+        /// </summary>
+        /// <param name="url">The product url to get the image from</param>
+        /// <param name="parameters">A set of optional graph parameters</param>
+        /// <returns>A new image</returns>
         private static Bitmap DownloadGraphImage(string url, GraphParameters parameters)
         {
             var imageUrl = ConvertWebpageUrlToImageUrl(url, parameters.Width, parameters.Height);
             return HttpService.DownloadImage(imageUrl);
         }
 
+        /// <summary>
+        ///     Transforms a point on a 2D matrix such that it will exist within that matrix
+        /// </summary>
+        /// <param name="i">The point to transform</param>
+        /// <param name="xMin">The minimum x value</param>
+        /// <param name="xMax">The maximum x value</param>
+        /// <param name="yMin">The minimum y value</param>
+        /// <param name="yMax">The maximum y value</param>
+        /// <param name="tyMin">The minimum y value in the "horizontal" direction</param>
+        /// <param name="tyMax">The maximum y value in the "horizontal" direction</param>
+        /// <param name="txMin">The minimum x value in the "horizontal" direction</param>
+        /// <param name="txMax">The maximum x value in the "horizontal" direction</param>
+        /// <returns></returns>
         private static PointF ScalePoint(PointF i, decimal xMin, decimal xMax, decimal yMin, decimal yMax,
             decimal tyMin, decimal tyMax, decimal txMin, decimal txMax)
         {

@@ -2,12 +2,15 @@
 
 namespace CamelCamelCamelToExcel
 {
+    /// <summary>
+    ///     Graph configuration options
+    /// </summary>
     internal class GraphParameters
     {
+        public readonly uint Height;
+        public readonly uint Width;
         public DateTime EndDate;
         public DateTime StartDate;
-        public readonly uint Width;
-        public readonly uint Height;
 
         public GraphParameters(DateTime startDate, DateTime endDate, uint width, uint height)
         {
