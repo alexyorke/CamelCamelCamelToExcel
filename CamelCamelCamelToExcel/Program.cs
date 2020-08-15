@@ -15,7 +15,7 @@ namespace CamelCamelCamelToExcel
 
             var tsv = graph.Aggregate("", (current, point) => current + $"{point.X}\t{point.Y}\n");
 
-            File.WriteAllText("camelcamelcamel.txt", tsv);
+            File.WriteAllText("CamelCamelCamelGraph.tsv", tsv);
         }
     }
 }
